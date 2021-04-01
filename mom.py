@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import List
 
 import numpy as np
 import scipy.linalg
@@ -14,7 +14,12 @@ def form_L(B312: List[np.ndarray], k: int) -> np.ndarray:
     
     # step 2: obtain the diagonals of the matrices R3^-1 @ B312[j] @ R3
     # for all but the first entry.
-    R3_inv = np.linalg.inv(R3)
+    try:
+        R3_inv = np.linalg.inv(R3)
+    except np.linalg.LinAlgError:
+        print(f'Failed to invert R3:\n\n{R3}')
+        return None, None
+
     for i in range(1, k):
         L[i] = np.diag(R3_inv.dot(B312[i]).dot(R3))
     
@@ -100,11 +105,16 @@ def run(X, k: int) -> np.ndarray:
     # form matrix L
     L, R3 = form_L(B312, k)
 
-    # form and return M2
-    O = U2.dot(np.linalg.inv(theta).dot(L))
+    if L is None:
+        return None
 
-    # get transition matrix
-    T = np.linalg.inv(U3.T.dot(O)).dot(R3)
-    T = T / T.sum(axis=0).T
+    else:
 
-    return O, T
+        # form and return M2
+        O = U2.dot(np.linalg.inv(theta).dot(L))
+
+        # get transition matrix
+        T = np.linalg.inv(U3.T.dot(O)).dot(R3)
+        T = T / T.sum(axis=0).T
+
+        return O, T
