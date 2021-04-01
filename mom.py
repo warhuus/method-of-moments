@@ -2,11 +2,10 @@ from typing import Union, List
 
 import torch
 import numpy as np
-from numpy import ndarray
 import scipy.linalg
 
 
-def form_L(B312: List[np.ndarray], k: int) -> ndarray:
+def form_L(B312: List[np.ndarray], k: int) -> np.ndarray:
     ''' Return L, R3 '''
     L = np.empty((k, k))
 
@@ -56,7 +55,7 @@ def make_P312(X: np.ndarray) -> np.ndarray:
     return sum(P312) / len(P312)
 
 
-def run(X, k: int) -> ndarray:
+def run(X, k: int) -> np.ndarray:
     '''
     Anandkumar, et al. 2012, "Algorithm B".
     
