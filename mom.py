@@ -17,7 +17,7 @@ def form_L(B312: List[np.ndarray], k: int) -> np.ndarray:
     try:
         R3_inv = np.linalg.inv(R3)
     except np.linalg.LinAlgError:
-        print(f'Failed to invert R3:\n\n{R3}')
+        print(f'Failed to invert R3:\n\n{R3}\n')
         return None, None
 
     for i in range(1, k):
@@ -114,7 +114,16 @@ def run(X, k: int) -> np.ndarray:
         O = U2.dot(np.linalg.inv(theta).dot(L))
 
         # get transition matrix
-        T = np.linalg.inv(U3.T.dot(O)).dot(R3)
+        try:
+            T = np.linalg.inv(U3.T.dot(O)).dot(R3)
+        except np.linalg.LinAlgError:
+            print(f'Failed to invert U3^T O:\n\n{U3.T.dot(O)}\n')
+            return None
+
+        if (T < 0).any():
+            print(f'Transition matrix negative:\n\n{T}\n')
+            return None
+
         T = T / T.sum(axis=0).T
 
         return O, T
