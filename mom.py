@@ -63,8 +63,8 @@ def make_P312(X: np.ndarray) -> np.ndarray:
 def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
     '''
     Implementation of Algorithm B from Anandkumar, et al. 2012 for HMMs with
-    multivariate Gaussian emissions. Code taken partly from maxentile (https://bit.ly/3ualJru) with inspiration
-    from cmgithub's Matlab code for discrete emissions (https://bit.ly/3uakvfW).
+    multivariate Gaussian emissions. Code taken partly from maxentile (https://bit.ly/3ualJru)
+    with inspiration from cmgithub's Matlab code for discrete emissions (https://bit.ly/3uakvfW).
     
     Returns None, None upon insolvent results. To see errors, use verbose = True.
 
@@ -124,7 +124,7 @@ def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
             if verbose:
                 print(f'failed to invert U3^T O:\n\nU3^T O = {U3.T.dot(O)}\n')
 
-
+        # set to None if any probabilities are negative
         if (T < 0).any():
             T = None
             if verbose:
