@@ -1,6 +1,5 @@
 from typing import Union, List
 
-import torch
 import numpy as np
 import scipy.linalg
 
