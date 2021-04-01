@@ -4,7 +4,7 @@ import numpy as np
 import scipy.linalg
 
 
-def form_L(B312: List[np.ndarray], k: int) -> np.ndarray:
+def form_L(B312: List[np.ndarray], k: int, verbose: bool) -> np.ndarray:
     ''' Return L, R3 '''
     L = np.empty((k, k))
 
@@ -17,8 +17,9 @@ def form_L(B312: List[np.ndarray], k: int) -> np.ndarray:
     try:
         R3_inv = np.linalg.inv(R3)
     except np.linalg.LinAlgError:
-        print(f'Failed to invert R3:\n\n{R3}\n')
         return None, None
+        if verbose:
+            print(f'failed to invert R3:\n\nR3 = {R3}\n')
 
     for i in range(1, k):
         L[i] = np.diag(R3_inv.dot(B312[i]).dot(R3))
@@ -59,16 +60,18 @@ def make_P312(X: np.ndarray) -> np.ndarray:
     return sum(P312) / len(P312)
 
 
-def run(X, k: int) -> np.ndarray:
+def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
     '''
-    Anandkumar, et al. 2012, "Algorithm B".
-    
-    Code taken partly from maxentile (https://bit.ly/3ualJru) with inspiration
+    Implementation of Algorithm B from Anandkumar, et al. 2012 for HMMs with
+    multivariate Gaussian emissions. Code taken partly from maxentile (https://bit.ly/3ualJru) with inspiration
     from cmgithub's Matlab code for discrete emissions (https://bit.ly/3uakvfW).
+    
+    Returns None, None upon insolvent results. To see errors, use verbose = True.
 
     Input:
         X: Time series data, ndarray of shape (sample size, dimesions).
         k: A prior number of states, integer.
+        verbose: boolean (default False), whether or not to print errors.
         
     Output:
         O: Estimated emission means, ndarray of shape (k, dimensions).
@@ -103,10 +106,10 @@ def run(X, k: int) -> np.ndarray:
     ]
 
     # form matrix L
-    L, R3 = form_L(B312, k)
+    L, R3 = form_L(B312, k, verbose)
 
     if L is None:
-        return None
+        return None, None
 
     else:
 
@@ -117,13 +120,16 @@ def run(X, k: int) -> np.ndarray:
         try:
             T = np.linalg.inv(U3.T.dot(O)).dot(R3)
         except np.linalg.LinAlgError:
-            print(f'Failed to invert U3^T O:\n\n{U3.T.dot(O)}\n')
-            return None
+            T = None
+            if verbose:
+                print(f'failed to invert U3^T O:\n\nU3^T O = {U3.T.dot(O)}\n')
+
 
         if (T < 0).any():
-            print(f'Transition matrix negative:\n\n{T}\n')
-            return None
-
-        T = T / T.sum(axis=0).T
+            T = None
+            if verbose:
+                print(f'negative probability in T:\n\nT = {T}\n')
+        else:
+            T = T / T.sum(axis=0).T
 
         return O, T
