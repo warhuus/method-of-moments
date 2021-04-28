@@ -155,6 +155,14 @@ def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
         for j in range(k)
     ]
 
+    if verbose:
+        print(f'theta:\n{theta}\n')
+        print(f'U1:\n{U1}\n') 
+        print(f'U2:\n{U2}\n')
+        print(f'U3:\n{U3}\n')
+        print(f'P312_U3_theta:\n{P312_U3_theta}\n')
+        print(f'B312:\n{B312}\n')
+
     # form matrix L
     L, R3 = form_L(B312, k, verbose)
 
@@ -166,20 +174,29 @@ def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
         # form and return M2
         O = U2.dot(np.linalg.inv(theta).dot(L))
 
+        if verbose:
+            print(f'O:\n{O}\n')
+            print(f'L:\n{L}\n')
+            print(f'R:\n{R3}\n')
+
         # get transition matrix
         try:
             T = np.linalg.inv(U3.T.dot(O)).dot(R3)
         except np.linalg.LinAlgError:
-            T = None
             if verbose:
-                print(f'failed to invert U3^T O:\n\nU3^T O = {U3.T.dot(O)}\n')
+                print(f'failed to invert U3^T O:\n\nU3^T O =\n{U3.T.dot(O)}\n')
+            T = None
 
         # set to None if any probabilities are negative
         if (T < 0).any():
-            T = None
             if verbose:
-                print(f'negative probability in T:\n\nT = {T}\n')
+                print(f'negative probability in T:\n{T}\n')
+            T = None
+    
         else:
             T = T / T.sum(axis=0).T
+            if verbose:
+                print(f'T:\n{T}\n')
+                print(f'-------------\n')
 
         return O, T
