@@ -29,7 +29,7 @@ def form_L(B312: List[np.ndarray], k: int, verbose: bool) -> np.ndarray:
 
 def sample_rotation_matrix(k: int) -> np.ndarray:
     ''' Make sample rotation matrix Theta '''
-    theta, R = np.linalg.qr(np.random.normal(size=(k, k)))
+    theta, R = np.linalg.qr(np.random.normal(scale=5, size=(k, k)))
     theta = theta @ np.diag(np.sign(np.diag(R)))
 
     if np.linalg.det(theta) < 0:
