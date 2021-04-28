@@ -110,7 +110,7 @@ def compute_top_k_singular_values(P31: np.ndarray, P32: np.ndarray, k):
     return [new_Us[key] for key in ['U1', 'U2', 'U3']]
 
 
-def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
+def run_algorithm_B(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
     '''
     Implementation of Algorithm B from Anandkumar, et al. 2012 for HMMs with
     multivariate Gaussian emissions. Code taken partly from maxentile (https://bit.ly/3ualJru)
