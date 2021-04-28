@@ -60,6 +60,56 @@ def make_P312(X: np.ndarray) -> np.ndarray:
     return sum(P312) / len(P312)
 
 
+def transform(X: np.ndarray):
+    """ Transform X with flattened empircal covariance """
+    N, D = X.shape
+    Sigma = np.array([np.einsum('i, j -> ij', X[i], X[i])[
+                       np.tril(np.ones([D, D])) == 1]
+                      for i in range(N)])
+    X_tilde = np.hstack([X, Sigma])
+
+    assert X_tilde.shape == (N, D + D*(D + 1) // 2)
+    assert X_tilde[1, 1] == X[1, 1]
+    assert (X_tilde[1, D:D + 2] == np.einsum('i, j -> ij', X[1], X[1])[:2, 0]).all()
+
+    return X_tilde
+
+
+def separate_means_and_sigma(O: np.ndarray, D: int):
+    """
+    Retreive means and sigma from the outputted O matrix of
+    emission probabilities
+    """
+    flat_sigma = O[D:]
+    assert len(flat_sigma) == D*(D + 1) // 2
+    return O[:D], flat_sigma
+
+
+def compute_top_k_singular_values(P31: np.ndarray, P32: np.ndarray, k):
+    
+    U3, s, U1 = np.linalg.svd(P31)
+    assert np.allclose(P31.dot(U1[0]), s[0] * U3[:, 0])
+
+    rightsvec, s, U2 = np.linalg.svd(P32)
+    assert np.allclose(P32.dot(U2[0]), s[0] * rightsvec[:, 0])
+
+    U1 = U1.T[:, :k]
+    U2 = U2.T[:, :k]
+    U3 = U3[:, :k]
+
+    old_Us = {'U1': U1, 'U2': U2, 'U3': U3}
+    new_Us = old_Us.copy()
+
+    for key, value in new_Us.items():
+        for i, vector in enumerate(value.T):
+            new_Us[key][:, i] = -vector if all(vector < 0) else vector
+
+    assert all([(abs(new_Us[key]) == abs(old_Us[key])).all()
+                for key in old_Us.keys()])
+    
+    return [new_Us[key] for key in ['U1', 'U2', 'U3']]
+
+
 def run(X: np.ndarray, k: int, verbose: bool = False) -> np.ndarray:
     '''
     Implementation of Algorithm B from Anandkumar, et al. 2012 for HMMs with
